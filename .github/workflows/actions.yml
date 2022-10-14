@@ -1,0 +1,38 @@
+name: Actions
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: mkdir -p out
+    - run: cp -r src/* out
+    - uses: actions/upload-artifact@v2
+      with:
+        name: out
+        path: out/
+
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: out
+        path: out/
+
+    - run: |
+        cd out/
+        git init -b gh-pages
+        git config user.name chromeos-audio+bot
+        git config user.email chromeos-audio+bot@google.com
+        git add -A
+        git commit -m 'build ${{ github.sha }}'
+        git remote add pages https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}
+        git push pages gh-pages --force
