@@ -1,5 +1,5 @@
-import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { LitElement, PropertyValueMap, html } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
 import '@material/web/chips/chip-set';
 import '@material/web/chips/suggestion-chip';
@@ -294,6 +294,7 @@ export class DsState extends LitElement {
   @state()
   state: State | null = null;
   pushFunc = (_s: State) => {};
+  isLastState = false;
 
   protected override render() {
     return html`
@@ -338,6 +339,14 @@ export class DsState extends LitElement {
       @click=${() => this.pushFunc(this.s.plug(device))}
     ></md-suggestion-chip>`;
   }
+
+  protected override async updated() {
+    if (!this.isLastState) {
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 0));
+    document.body.scrollIntoView(false);
+  }
 }
 
 /**
@@ -363,6 +372,7 @@ export class DsPlayground extends LitElement {
               <ds-state
                 .state=${s}
                 .pushFunc=${(s: State) => this.push(i, s)}
+                .isLastState=${i + 1 === this.steps.length}
               ></ds-state>
             </li>`
         )}
