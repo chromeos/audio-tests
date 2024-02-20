@@ -77,26 +77,29 @@ class PriorityListStrategy extends Strategy {
     }
 
     if (this.active === null) {
-      this.active = this.connectedDevices.reduce(
-        (accumulator: Device | null, currentValue: Device) => {
-          const currentPriority = this.priorityList.findIndex(
-            x => x.name == currentValue.name
-          );
-          if (currentPriority === -1) {
+      // Start with the remaining device with the highest user priority.
+      this.select(
+        this.connectedDevices.reduce(
+          (accumulator: Device | null, currentValue: Device) => {
+            const currentPriority = this.priorityList.findIndex(
+              x => x.name == currentValue.name
+            );
+            if (currentPriority === -1) {
+              return accumulator;
+            }
+            if (accumulator === null) {
+              return currentValue;
+            }
+            const accumulatorPriority = this.priorityList.findIndex(
+              x => x.name === accumulator.name
+            );
+            if (accumulatorPriority < currentPriority) {
+              return currentValue;
+            }
             return accumulator;
-          }
-          if (accumulator === null) {
-            return currentValue;
-          }
-          const accumulatorPriority = this.priorityList.findIndex(
-            x => x.name === accumulator.name
-          );
-          if (accumulatorPriority < currentPriority) {
-            return currentValue;
-          }
-          return accumulator;
-        },
-        null
+          },
+          null
+        )
       );
     }
 
@@ -113,10 +116,36 @@ class PriorityListStrategy extends Strategy {
       }
     }
 
+    if (this.active === null) {
+      // If there's still nothing selected at this point, just select one
+      // based on the built-in priority.
+      this.select(
+        newDevices.reduce(
+          (accumulator: Device | null, currentValue: Device) => {
+            if (accumulator === null) {
+              return currentValue;
+            }
+            if (
+              this.getBuiltinPriority(accumulator) <
+              this.getBuiltinPriority(currentValue)
+            ) {
+              return currentValue;
+            }
+            return accumulator;
+          },
+          null
+        )
+      );
+    }
+
     return this.active;
   }
 
-  override select(device: Device): void {
+  override select(device: Device | null): void {
+    if (device === null) {
+      this.active = null;
+      return;
+    }
     if (!contains(this.connectedDevices, device)) {
       throw new Error(
         `${
