@@ -394,18 +394,20 @@ export class DsPlayground extends LitElement {
     return html`
       <ds-legend></ds-legend>
       <h3>Playground</h3>
-      <ol>
-        ${[...this.steps.entries()].map(
-          ([i, s]) =>
-            html`<li>
-              <ds-state
-                .state=${s}
-                .pushFunc=${(s: State) => this.push(i, s)}
-                .isLastState=${i + 1 === this.steps.length}
-              ></ds-state>
-            </li>`
-        )}
-      </ol>
+      <section>
+        <ol>
+          ${[...this.steps.entries()].map(
+            ([i, s]) =>
+              html`<li>
+                <ds-state
+                  .state=${s}
+                  .pushFunc=${(s: State) => this.push(i, s)}
+                  .isLastState=${i + 1 === this.steps.length}
+                ></ds-state>
+              </li>`
+          )}
+        </ol>
+      </section>
     `;
   }
 
