@@ -23,6 +23,8 @@ jobs:
   deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: [build]
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v4.1.7
