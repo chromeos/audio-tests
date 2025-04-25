@@ -15,7 +15,7 @@ jobs:
     - run: npm ci && npm run build
       working-directory: src/ds-playground
     - run: cp -r src/ds-playground/dist out/ds-playground
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: out
         path: out/
