@@ -221,9 +221,9 @@ class PriorityListStrategy extends Strategy {
       case DeviceType.USB:
       case DeviceType.Bluetooth:
         return 3;
-      case DeviceType.HDMI:
-        return 2;
       case DeviceType.Internal:
+        return 2;
+      case DeviceType.HDMI:
         return 1;
     }
   }
