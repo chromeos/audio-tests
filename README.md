@@ -2,11 +2,7 @@
 
 This is a repository for web pages to test or demonstrate audio functionality.
 
-The rendered test pages are hosted on github.io:
-
-*   [audio-tuning](https://chromeos.github.io/audio-tests/audio-tuning)
-*   [mic-testing](https://chromeos.github.io/audio-tests/mic-testing)
-*   [volume-tuning](https://chromeos.github.io/audio-tests/volume-tuning)
+The rendered test pages are hosted on https://chromeos.github.io/audio-tests/.
 
 ## Contributing
 
