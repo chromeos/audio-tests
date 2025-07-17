@@ -4,6 +4,7 @@ import {IndexedDBStorage} from './indexeddb-storage.mjs';
 import * as visualize from './visualize.mjs';
 
 const DELETE_BUTTON_SELECTOR = '.delete-button';
+const RECORDING_DESCRIPTION_SELECTOR = '.recording-description';
 
 const recordButton = document.querySelector('#record');
 const recordOutlineEl = document.querySelector('#record-outline');
@@ -36,9 +37,9 @@ async function init() {
   const storage = new IndexedDBStorage();
   await storage.open();
 
-  for await (const [id, blob] of storage.readAll()) {
+  for await (const [id, {recordingDescription, blob}] of storage.readAll()) {
     const clipContainer = insertClip();
-    finalizeClip({clipContainer, id, blob, storage});
+    finalizeClip({clipContainer, id, recordingDescription, blob, storage});
   }
 }
 
@@ -54,7 +55,8 @@ function insertClip() {
 }
 
 /** Finalizes a clip by replacing the visualization with the audio element. */
-function finalizeClip({clipContainer, blob, id, storage}) {
+function finalizeClip({clipContainer, blob, id, recordingDescription, storage}) {
+  clipContainer.querySelector(RECORDING_DESCRIPTION_SELECTOR).textContent = recordingDescription;
   clipContainer.querySelector(DELETE_BUTTON_SELECTOR).onclick = () => {
     clipContainer.parentNode.removeChild(clipContainer);
     storage.delete(parseInt(id));
@@ -92,6 +94,9 @@ async function startRecording({storage}) {
   const canvas = clipContainer.querySelector('canvas');
   canvas.width = clipContainer.offsetWidth;
 
+  const recordingDescription = (new Date()).toLocaleString();
+  clipContainer.querySelector(RECORDING_DESCRIPTION_SELECTOR).textContent = recordingDescription;
+
   const outlineIndicator = new visualize.OutlineLoudnessIndicator(
       recordOutlineEl);
   const waveformIndicator = new visualize.WaveformIndicator(canvas);
@@ -105,8 +110,9 @@ async function startRecording({storage}) {
     outlineIndicator.hide();
     recordButton.onclick = () => startRecording({storage});
     const blob = new Blob(chunks, {type: mediaRecorder.mimeType});
-    const id = await storage.save(blob);
-    finalizeClip({clipContainer, id, blob, storage});
+    console.log({recordingDescription, blob});
+    const id = await storage.save({recordingDescription, blob});
+    finalizeClip({clipContainer, id, blob, recordingDescription, storage});
   };
   mediaRecorder.start();
 
