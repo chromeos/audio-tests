@@ -28,11 +28,52 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js');
 }
 
+const CONFIG_RADIOS_SELECTOR = '#config-radios';
+const CONFIG_RADIO_TEMPLATE_SELECTOR = '#config-radio-template';
+
+const RECORDING_CONFIGS = [
+  { name: "default", param: true },
+  {
+    name: "no-effects",
+    param: {
+      autoGainControl: false,
+      echoCancellation: false,
+      noiseSuppression: false,
+    }
+  },
+];
+
+function populateRecordingConfigurations() {
+  const configRadioTemplate = document.querySelector(CONFIG_RADIO_TEMPLATE_SELECTOR);
+  const configRadios = document.querySelector(CONFIG_RADIOS_SELECTOR);
+
+  for (const [i, {name, param}] of RECORDING_CONFIGS.entries()) {
+    const radio = configRadioTemplate.content.firstElementChild.cloneNode(true);
+    const input = radio.querySelector('input');
+    const label = radio.querySelector('label');
+    input.id = `radio-${name}`;
+    label.textContent = `${name} (${JSON.stringify(param)})`;
+    label.setAttribute('for', input.id);
+    label.recordingParam = param;
+    if (i === 0) input.checked = true;
+    configRadios.appendChild(radio);
+  }
+}
+
+function getSelectedRecordingConfig() {
+  const configRadios = document.querySelector(CONFIG_RADIOS_SELECTOR);
+  const selectedRadio = configRadios.querySelector('input:checked');
+  const label = configRadios.querySelector(`label[for="${selectedRadio.id}"]`);
+
+  return {text: label.textContent, param: label.recordingParam};
+}
+
 /** Initializes the web application. */
 async function init() {
   /* global mdc */ // Material Components Web scripts are loaded in index.html.
   new mdc.iconButton.MDCIconButtonToggle(recordButton);
   recordButton.onclick = () => startRecording({storage});
+  populateRecordingConfigurations();
 
   const storage = new IndexedDBStorage();
   await storage.open();
@@ -70,9 +111,9 @@ function finalizeClip({clipContainer, blob, id, recordingDescription, storage}) 
  * @return {Promise<MediaStream>|null} Promise with MediaStream or
  *   null on error.
  */
-async function getAudioStream() {
+async function getAudioStream(param) {
   try {
-    return await navigator.mediaDevices.getUserMedia({audio: true});
+    return await navigator.mediaDevices.getUserMedia({audio: param});
   } catch (e) {
     console.error(e);
     return null;
@@ -84,8 +125,10 @@ async function getAudioStream() {
  * waveform.
  */
 async function startRecording({storage}) {
+  const config = getSelectedRecordingConfig();
+
   const chunks = [];
-  const stream = await getAudioStream();
+  const stream = await getAudioStream(config.param);
   if (!stream) {
     return; // Permissions have not been granted or an error occurred.
   }
@@ -94,7 +137,7 @@ async function startRecording({storage}) {
   const canvas = clipContainer.querySelector('canvas');
   canvas.width = clipContainer.offsetWidth;
 
-  const recordingDescription = (new Date()).toLocaleString();
+  const recordingDescription = `${(new Date()).toLocaleString()}\u2003${config.text}`;
   clipContainer.querySelector(RECORDING_DESCRIPTION_SELECTOR).textContent = recordingDescription;
 
   const outlineIndicator = new visualize.OutlineLoudnessIndicator(
