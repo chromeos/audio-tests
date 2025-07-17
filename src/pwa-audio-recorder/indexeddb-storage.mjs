@@ -9,9 +9,13 @@ class IndexedDBStorage {
   */
   open() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME);
+      const request = indexedDB.open(DB_NAME, 2);
       request.onerror = reject;
-      request.onupgradeneeded = () => {
+      request.onupgradeneeded = (event) => {
+        if (event.oldVersion) {
+          // Delete old versions.
+          request.result.deleteObjectStore(STORE_NAME);
+        }
         // Create ObjectStore on first connection.
         request.result.createObjectStore(STORE_NAME, {autoIncrement: true});
       };
