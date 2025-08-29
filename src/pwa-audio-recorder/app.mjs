@@ -41,6 +41,14 @@ const RECORDING_CONFIGS = [
       noiseSuppression: false,
     }
   },
+  {
+    name: "agc-only",
+    param: {
+      autoGainControl: true,
+      echoCancellation: false,
+      noiseSuppression: false,
+    }
+  },
 ];
 
 function populateRecordingConfigurations() {
