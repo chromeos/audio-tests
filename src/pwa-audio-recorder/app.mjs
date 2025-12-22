@@ -90,6 +90,10 @@ async function init() {
     const clipContainer = insertClip();
     finalizeClip({clipContainer, id, recordingDescription, blob, storage});
   }
+
+  if (new URLSearchParams(window.location.search).get('test') === '1') {
+    runTest();
+  }
 }
 
 /**
@@ -208,4 +212,29 @@ function visualizeRecording({stream, outlineIndicator, waveformIndicator}) {
   }
 
   draw();
+}
+
+async function runTest() {
+  // 1. Start recording
+  recordButton.click();
+
+  // 2. After 10 seconds, start playback
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  const playbackSource = document.querySelector('#playback-source');
+  playbackSource.play();
+
+  // 3. After 10 seconds, stop recording and stop playback
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  recordButton.click();
+  playbackSource.pause();
+  playbackSource.currentTime = 0;
+
+  // 4. Download the recorded audio
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const clip = soundClips.firstElementChild;
+  const audio = clip.querySelector('audio');
+  const a = document.createElement('a');
+  a.href = audio.src;
+  a.download = 'recorded_audio.webm';
+  a.click();
 }
