@@ -239,19 +239,19 @@ function visualizeRecording({stream, outlineIndicator, waveformIndicator}) {
 }
 
 async function runTest() {
-  // 1. Start recording
+  // 1. Start recording and playback
   recordButton.click();
-
-  // 2. After 10 seconds, start playback
-  await new Promise((resolve) => setTimeout(resolve, 10000));
   const playbackSource = document.querySelector('#playback-source');
   playbackSource.play();
 
-  // 3. After 10 seconds, stop recording and stop playback
-  await new Promise((resolve) => setTimeout(resolve, 10000));
-  recordButton.click();
+  // 2. After 15 seconds, stop playback
+  await new Promise((resolve) => setTimeout(resolve, 15000));
   playbackSource.pause();
   playbackSource.currentTime = 0;
+
+  // 3. After another 25 seconds (total 40s), stop recording
+  await new Promise((resolve) => setTimeout(resolve, 25000));
+  recordButton.click();
 
   // 4. Download the recorded audio
   await new Promise((resolve) => setTimeout(resolve, 1000));
