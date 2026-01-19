@@ -257,8 +257,28 @@ async function runTest() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
   const clip = soundClips.firstElementChild;
   const audio = clip.querySelector('audio');
-  const a = document.createElement('a');
-  a.href = audio.src;
-  a.download = 'recorded_audio.webm';
-  a.click();
+
+  try {
+    const response = await fetch(audio.src);
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioCtx = new AudioContext();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const wavView = audioBufferToWav(audioBuffer);
+    const wavBlob = new Blob([wavView], { type: 'audio/wav' });
+    const url = URL.createObjectURL(wavBlob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recorded_audio.wav';
+    document.body.appendChild(a);
+    a.click();
+
+    // Clean up
+    await audioCtx.close();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (e) {
+    console.error('Test failed to download WAV:', e);
+  }
 }
