@@ -2,8 +2,10 @@
 
 import {IndexedDBStorage} from './indexeddb-storage.mjs';
 import * as visualize from './visualize.mjs';
+import { audioBufferToWav } from './wav-utils.mjs';
 
 const DELETE_BUTTON_SELECTOR = '.delete-button';
+const DOWNLOAD_BUTTON_SELECTOR = '.download-button';
 const RECORDING_DESCRIPTION_SELECTOR = '.recording-description';
 
 const recordButton = document.querySelector('#record');
@@ -113,6 +115,28 @@ function finalizeClip({clipContainer, blob, id, recordingDescription, storage}) 
   clipContainer.querySelector(DELETE_BUTTON_SELECTOR).onclick = () => {
     clipContainer.parentNode.removeChild(clipContainer);
     storage.delete(parseInt(id));
+  };
+  clipContainer.querySelector(DOWNLOAD_BUTTON_SELECTOR).onclick = async () => {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioCtx = new AudioContext();
+    try {
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      const wavView = audioBufferToWav(audioBuffer);
+      const wavBlob = new Blob([wavView], { type: 'audio/wav' });
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${recordingDescription.replace(/[:\/\s]/g, '_')}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Error converting to WAV:', e);
+      alert('Failed to convert audio to WAV');
+    } finally {
+      await audioCtx.close();
+    }
   };
   clipContainer.querySelector('audio').src = URL.createObjectURL(blob);
   clipContainer.classList.remove('clip-recording');
