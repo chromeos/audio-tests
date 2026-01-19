@@ -56,6 +56,7 @@ const RECORDING_CONFIGS = [
 function populateRecordingConfigurations() {
   const configRadioTemplate = document.querySelector(CONFIG_RADIO_TEMPLATE_SELECTOR);
   const configRadios = document.querySelector(CONFIG_RADIOS_SELECTOR);
+  const configParam = new URLSearchParams(window.location.search).get('config');
 
   for (const [i, {name, param}] of RECORDING_CONFIGS.entries()) {
     const radio = configRadioTemplate.content.firstElementChild.cloneNode(true);
@@ -65,7 +66,16 @@ function populateRecordingConfigurations() {
     label.textContent = `${name} (${JSON.stringify(param)})`;
     label.setAttribute('for', input.id);
     label.recordingParam = param;
-    if (i === 0) input.checked = true;
+
+    // Check if this config matches the query param, otherwise default to the first one
+    if (configParam) {
+      if (name === configParam) {
+        input.checked = true;
+      }
+    } else if (i === 0) {
+      input.checked = true;
+    }
+
     configRadios.appendChild(radio);
   }
 }
