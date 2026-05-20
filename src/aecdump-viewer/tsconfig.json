@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "lib": ["es2021", "dom"],
+    "strict": true,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "outDir": "out-tsc",
+    "allowJs": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "rootDir": "./",
+    "incremental": true
+  },
+  "include": ["**/*.ts", "src/proto/debug.js"]
+}

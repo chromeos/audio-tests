@@ -1,0 +1,29 @@
+{
+  "name": "aecdump-viewer",
+  "description": "Web-based AECDump Viewer",
+  "license": "Apache-2.0",
+  "author": "aaronyu",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "yarn run proto:generate && tsc && vite build",
+    "start": "yarn run proto:generate && vite",
+    "serve:dist": "vite preview --port 8080",
+    "serve:dev": "vite --port 8000",
+    "test": "playwright test",
+    "test:dev": "TEST_ENV=dev playwright test",
+    "proto:generate": "pbjs -t static-module -w es6 -o src/proto/debug.js src/proto/debug.proto && pbts -o src/proto/debug.d.ts src/proto/debug.js"
+  },
+  "dependencies": {
+    "lit": "^3.1.1",
+    "protobufjs": "^7.2.4",
+    "wavesurfer.js": "^7.7.15"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.2",
+    "protobufjs-cli": "^1.1.1",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
