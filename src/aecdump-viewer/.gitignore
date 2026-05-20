@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+out-tsc/
+
+# Generated Protobuf files
+src/proto/debug.js
+src/proto/debug.d.ts
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Editor configs and OS files
+.DS_Store
+*.local
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
