@@ -10,9 +10,30 @@
   </head>
   <body>
   <h1> Volume Tuning </h1>
-  <table id="minmax"></table>
-  <table id="fixes"> </table>
-  <canvas id="curve"> </canvas>
+  <div style="margin-bottom: 15px;">
+    <label>
+      <input type="radio" name="config_format" value="chromeos" onchange="toggle_format()"> ChromeOS Format
+    </label>
+    <label style="margin-left: 10px;">
+      <input type="radio" name="config_format" value="android" checked onchange="toggle_format()"> Android Format
+    </label>
+  </div>
+
+  <div id="speaker_section">
+    <h2 id="speaker_title" style="display:none;">Speaker</h2>
+    <table id="minmax_speaker"></table>
+    <table id="fixes_speaker"></table>
+    <canvas id="curve_speaker"></canvas>
+  </div>
+
+  <div id="headphone_section" style="display:none; margin-top: 20px;">
+    <hr>
+    <h2>Headphone</h2>
+    <table id="minmax_headphone"></table>
+    <table id="fixes_headphone"></table>
+    <canvas id="curve_headphone"></canvas>
+  </div>
+
   <hr>
   <input type=button value='Download config' onclick="download_config()">
   </input>
@@ -21,4 +42,3 @@
   </div>
   </body>
 </html>
-<html>

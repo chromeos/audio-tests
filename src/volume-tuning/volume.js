@@ -3,27 +3,70 @@
  * found in the LICENSE file.
  */
 
-var NN = 100;    // Total number of points
-var FIXES = 25;  // Number of fixed points, evenly spaced in the range [0, NN]
-var minmax_boxes = []; // The text input boxes for min/max/step
-var index_boxes = [];  // The text input boxes for min/max/step index
-var fix_boxes = {};    // Map index -> input element
+var speaker_section;
+var headphone_section;
 
 window.onload = function() {
-  init_minmax();
-  init_index_boxes();
-  init_fixes();
-  init_canvas();
+  speaker_section = new CurveSection('speaker');
+  speaker_section.init({ minIdx: 1, maxIdx: 15, stepIdx: 1 });
+
+  headphone_section = new CurveSection('headphone');
+  headphone_section.init({ minIdx: 1, maxIdx: 15, stepIdx: 1 });
+
+  toggle_format();
 };
 
-function getMinIdx() { return index_boxes[0] ? parseInt(index_boxes[0].value) : 0; }
-function getMaxIdx() { return index_boxes[1] ? parseInt(index_boxes[1].value) : 100; }
-function getStepIdx() { return index_boxes[2] ? parseInt(index_boxes[2].value) : 4; }
+function toggle_format() {
+  var formatEl = document.querySelector('input[name="config_format"]:checked');
+  var format = formatEl ? formatEl.value : 'android';
+  var speakerTitle = document.getElementById('speaker_title');
+  var headphoneSection = document.getElementById('headphone_section');
+
+  if (format === 'android') {
+    speakerTitle.style.display = 'block';
+    headphoneSection.style.display = 'block';
+    if (speaker_section) speaker_section.setIndexDefaults(1, 15, 1);
+    if (headphone_section) headphone_section.setIndexDefaults(1, 15, 1);
+  } else {
+    speakerTitle.style.display = 'none';
+    headphoneSection.style.display = 'none';
+    if (speaker_section) speaker_section.setIndexDefaults(0, 100, 4);
+  }
+}
+
+function CurveSection(prefix) {
+  this.prefix = prefix;
+  this.minmax_boxes = []; // The text input boxes for min/max/step
+  this.index_boxes = [];  // The text input boxes for min/max/step index
+  this.fix_boxes = {};    // Map index -> input element
+  this.canvas = document.getElementById('curve_' + prefix);
+}
+
+CurveSection.prototype.getMinIdx = function() { return this.index_boxes[0] ? parseInt(this.index_boxes[0].value) : 0; };
+CurveSection.prototype.getMaxIdx = function() { return this.index_boxes[1] ? parseInt(this.index_boxes[1].value) : 100; };
+CurveSection.prototype.getStepIdx = function() { return this.index_boxes[2] ? parseInt(this.index_boxes[2].value) : 4; };
+
+CurveSection.prototype.init = function(defaults) {
+  this.init_minmax();
+  this.init_index_boxes(defaults);
+  this.rebuild_fixes();
+  this.redraw();
+};
+
+CurveSection.prototype.setIndexDefaults = function(minIdx, maxIdx, stepIdx) {
+  if (this.index_boxes.length >= 3) {
+    this.index_boxes[0].value = minIdx;
+    this.index_boxes[1].value = maxIdx;
+    this.index_boxes[2].value = stepIdx;
+    this.rebuild_fixes();
+  }
+};
 
 // Create min/max/step boxes
-function init_minmax() {
-  var table = document.getElementById('minmax');
+CurveSection.prototype.init_minmax = function() {
+  var table = document.getElementById('minmax_' + this.prefix);
   var names = ['Min:' , 'Max:', 'Step:'];
+  var self = this;
   for (var i = 0; i < names.length; i++) {
     var row = table.insertRow(-1);
     var col_name = row.insertCell(-1);
@@ -36,19 +79,20 @@ function init_minmax() {
     col_name.align = 'right';
     col_box.appendChild(box);
     col_db.appendChild(document.createTextNode('dB'));
-    minmax_boxes.push(box);
-    box.oninput = redraw;
+    self.minmax_boxes.push(box);
+    box.oninput = function() { self.redraw(); };
   }
-}
+};
 
 // Create Min Index, Max Index, Index Step inputs at top of fixes table
-function init_index_boxes() {
-  var table = document.getElementById('fixes');
+CurveSection.prototype.init_index_boxes = function(defaults) {
+  var table = document.getElementById('fixes_' + this.prefix);
   var indexFields = [
-    { label: 'Min Index:', val: 0 },
-    { label: 'Max Index:', val: 100 },
-    { label: 'Index Step:', val: 4 }
+    { label: 'Min Index:', val: defaults ? defaults.minIdx : 0 },
+    { label: 'Max Index:', val: defaults ? defaults.maxIdx : 100 },
+    { label: 'Index Step:', val: defaults ? defaults.stepIdx : 4 }
   ];
+  var self = this;
   for (var i = 0; i < indexFields.length; i++) {
     var row = table.insertRow(-1);
     var col_name = row.insertCell(-1);
@@ -62,39 +106,35 @@ function init_index_boxes() {
     col_name.appendChild(document.createTextNode(indexFields[i].label));
     col_name.align = 'right';
     col_box.appendChild(box);
-    index_boxes.push(box);
-    box.oninput = rebuild_fixes;
+    self.index_boxes.push(box);
+    box.oninput = function() { self.rebuild_fixes(); };
   }
 
   var sepRow = table.insertRow(-1);
   var sepCell = sepRow.insertCell(-1);
   sepCell.colSpan = 3;
   sepCell.innerHTML = '<hr style="border: 0; border-top: 1px solid #a0b8d9; margin: 4px 0;">';
-}
+};
 
-// Create fixed point boxes
-function init_fixes() {
-  rebuild_fixes();
-}
-
-function rebuild_fixes() {
-  var table = document.getElementById('fixes');
+CurveSection.prototype.rebuild_fixes = function() {
+  var table = document.getElementById('fixes_' + this.prefix);
   while (table.rows.length > 4) {
     table.deleteRow(4);
   }
 
-  var minIdx = getMinIdx();
-  var maxIdx = getMaxIdx();
-  var stepIdx = getStepIdx();
+  var minIdx = this.getMinIdx();
+  var maxIdx = this.getMaxIdx();
+  var stepIdx = this.getStepIdx();
 
   if (isNaN(minIdx) || isNaN(maxIdx) || isNaN(stepIdx) || stepIdx <= 0 || minIdx >= maxIdx) {
-    fix_boxes = {};
-    redraw();
+    this.fix_boxes = {};
+    this.redraw();
     return;
   }
 
-  var oldFixes = fix_boxes || {};
-  fix_boxes = {};
+  var oldFixes = this.fix_boxes || {};
+  this.fix_boxes = {};
+  var self = this;
 
   for (var i = minIdx; i <= maxIdx; i += stepIdx) {
     var row = table.insertRow(-1);
@@ -113,28 +153,24 @@ function rebuild_fixes() {
     col_name.align = 'right';
     col_box.appendChild(box);
     col_db.appendChild(document.createTextNode('dB'));
-    fix_boxes[i] = box;
-    box.oninput = redraw;
+    self.fix_boxes[i] = box;
+    box.oninput = function() { self.redraw(); };
   }
 
-  redraw();
-}
+  this.redraw();
+};
 
-function init_canvas() {
-  redraw();
-}
-
-function getFixIndices() {
+CurveSection.prototype.getFixIndices = function() {
   var indices = [];
-  for (var k in fix_boxes) {
+  for (var k in this.fix_boxes) {
     indices.push(parseInt(k));
   }
   indices.sort(function(a, b) { return a - b; });
   return indices;
-}
+};
 
 // Redraw everything on the canvas. This is run every time any input is changed.
-function redraw() {
+CurveSection.prototype.redraw = function() {
   var backgroundColor = 'black';
   var gridColor = 'rgb(200,200,200)';
   var dotColor = 'rgb(245,245,0)';
@@ -142,7 +178,8 @@ function redraw() {
   var marginBottom = 30;
   var marginTop = 20;
   var marginRight = 30;
-  var canvas = document.getElementById('curve');
+  var canvas = this.canvas || document.getElementById('curve_' + this.prefix);
+  if (!canvas) return;
   var ctx = canvas.getContext('2d');
   var w = 800;
   var h = 400;
@@ -166,12 +203,12 @@ function redraw() {
   ctx.lineTo(w + marginRight / 2, 0);
   ctx.stroke();
 
-  var minIdx = getMinIdx();
-  var maxIdx = getMaxIdx();
+  var minIdx = this.getMinIdx();
+  var maxIdx = this.getMaxIdx();
   if (isNaN(minIdx) || isNaN(maxIdx) || minIdx >= maxIdx) return;
 
   var idxRange = maxIdx - minIdx;
-  var fixIndices = getFixIndices();
+  var fixIndices = this.getFixIndices();
 
   // Draw vertical lines and labels on x axis
   ctx.strokeStyle = gridColor;
@@ -191,9 +228,9 @@ function redraw() {
   ctx.setLineDash([]);
 
   // Draw horizontal lines and labels on y axis
-  var min = parseFloat(minmax_boxes[0].value);
-  var max = parseFloat(minmax_boxes[1].value);
-  var step = parseFloat(minmax_boxes[2].value);
+  var min = parseFloat(this.minmax_boxes[0].value);
+  var max = parseFloat(this.minmax_boxes[1].value);
+  var step = parseFloat(this.minmax_boxes[2].value);
 
   // Soundness checks
   if (isNaN(min) || isNaN(max) || isNaN(step)) return;
@@ -239,7 +276,7 @@ function redraw() {
   ctx.fillStyle = dotColor;
   for (var i = 0; i < fixIndices.length; i++) {
     var fix_pos = fixIndices[i];
-    var v = getFix(fix_pos);
+    var v = this.getFix(fix_pos);
     if (isNaN(v)) continue;
     var x = (fix_pos - minIdx) / idxRange * w;
     var y = (v - min) / s * h / vdivs;
@@ -249,7 +286,7 @@ function redraw() {
   }
 
   // Draw interpolated points
-  var points = generatePoints();
+  var points = this.generatePoints();
   for (var i = minIdx; i <= maxIdx; i++) {
     var v = points[i];
     if (isNaN(v)) continue;
@@ -260,53 +297,54 @@ function redraw() {
     ctx.stroke();
     ctx.fill();
   }
-}
+};
 
 // Returns the value of the fixed point with index i
-function getFix(i) {
-  if (!fix_boxes[i]) return NaN;
-  var v = parseFloat(fix_boxes[i].value);
-  var min = parseFloat(minmax_boxes[0].value);
-  var max = parseFloat(minmax_boxes[1].value);
+CurveSection.prototype.getFix = function(i) {
+  if (!this.fix_boxes[i]) return NaN;
+  var v = parseFloat(this.fix_boxes[i].value);
+  var min = parseFloat(this.minmax_boxes[0].value);
+  var max = parseFloat(this.minmax_boxes[1].value);
 
   if (isNaN(v)) return v;
   if (v > max) v = max;
   if (v < min) v = min;
   return v;
-}
+};
 
 // Returns a value quantized to the given min/max/step
-function quantize(v) {
-  var min = parseFloat(minmax_boxes[0].value);
-  var max = parseFloat(minmax_boxes[1].value);
-  var step = parseFloat(minmax_boxes[2].value);
+CurveSection.prototype.quantize = function(v) {
+  var min = parseFloat(this.minmax_boxes[0].value);
+  var max = parseFloat(this.minmax_boxes[1].value);
+  var step = parseFloat(this.minmax_boxes[2].value);
 
   v = min + Math.round((v - min) / step) * step;
   if (isNaN(v)) return v;
   if (v > max) v = max;
   if (v < min) v = min;
   return v;
-}
+};
 
 // Generate points indexed by 0 to NN, using interpolation and quantization
-function generatePoints() {
+CurveSection.prototype.generatePoints = function() {
   // Go through all points, for each point:
   // (1) Find the left fix: the max defined fixed point <= current point
   // (2) Find the right fix: the min defined fixed point >= current point
   // (3) If both exist, interpolate value for current point
   // (4) Otherwise skip current point
 
-  var minIdx = getMinIdx();
-  var maxIdx = getMaxIdx();
+  var minIdx = this.getMinIdx();
+  var maxIdx = this.getMaxIdx();
   if (isNaN(minIdx) || isNaN(maxIdx) || minIdx >= maxIdx) return [];
 
-  var fixIndices = getFixIndices();
+  var fixIndices = this.getFixIndices();
+  var self = this;
 
   // Returns left fix index for current point, or NaN if it does not exist
   var find_left = function(current) {
     for (var i = fixIndices.length - 1; i >= 0; i--) {
       var fix_pos = fixIndices[i];
-      if (fix_pos <= current && !isNaN(getFix(fix_pos))) {
+      if (fix_pos <= current && !isNaN(self.getFix(fix_pos))) {
         return fix_pos;
       }
     }
@@ -317,7 +355,7 @@ function generatePoints() {
   var find_right = function(current) {
     for (var i = 0; i < fixIndices.length; i++) {
       var fix_pos = fixIndices[i];
-      if (fix_pos >= current && !isNaN(getFix(fix_pos))) {
+      if (fix_pos >= current && !isNaN(self.getFix(fix_pos))) {
         return fix_pos;
       }
     }
@@ -334,8 +372,8 @@ function generatePoints() {
 
     var xl = left;
     var xr = right;
-    var yl = getFix(left);
-    var yr = getFix(right);
+    var yl = self.getFix(left);
+    var yr = self.getFix(right);
 
     if (xl == xr) return yl;
 
@@ -344,10 +382,10 @@ function generatePoints() {
 
   var result = [];
   for (var x = minIdx; x <= maxIdx; x++) {
-    result[x] = quantize(interpolate(x));
+    result[x] = self.quantize(interpolate(x));
   }
   return result;
-}
+};
 
 function drawText(ctx, s, x, y, align) {
   ctx.save();
@@ -374,33 +412,76 @@ function drawText(ctx, s, x, y, align) {
 //   max_volume = 0
 //
 function download_config() {
-  var minIdx = getMinIdx();
-  var maxIdx = getMaxIdx();
-  if (isNaN(minIdx) || isNaN(maxIdx)) return;
+  var formatEl = document.querySelector('input[name="config_format"]:checked');
+  var format = formatEl ? formatEl.value : 'android';
 
-  var content = '';
-  content += '[Speaker]\n';
-  content += '  volume_curve = explicit\n';
-  var points = generatePoints();
-  var last = 0;
-  for (var i = maxIdx; i >= minIdx; i--) {
-    var v = points[i];
-    if (isNaN(points[i])) v = last;
-    content += '  db_at_' + i + ' = ' + Math.round(v * 100) + '\n';
+  if (format === 'android') {
+    var content = "<?xml version='1.0' encoding='utf-8'?>\n<volumes>\n";
+
+    var sMin = speaker_section.getMinIdx();
+    var sMax = speaker_section.getMaxIdx();
+    var speakerPoints = speaker_section.generatePoints();
+    var lastS = 0;
+    content += '    <reference name="Speaker">\n';
+    for (var i = sMin; i <= sMax; i++) {
+      var v = speakerPoints[i];
+      if (v === undefined || isNaN(v)) {
+        v = lastS;
+      } else {
+        lastS = v;
+      }
+      var mb = Math.round(v * 100);
+      content += '        <point>' + i + ',' + mb + '</point>\n';
+    }
+    content += '    </reference>\n';
+
+    var hMin = headphone_section.getMinIdx();
+    var hMax = headphone_section.getMaxIdx();
+    var headphonePoints = headphone_section.generatePoints();
+    var lastH = 0;
+    content += '    <reference name="Headphone">\n';
+    for (var i = hMin; i <= hMax; i++) {
+      var v = headphonePoints[i];
+      if (v === undefined || isNaN(v)) {
+        v = lastH;
+      } else {
+        lastH = v;
+      }
+      var mb = Math.round(v * 100);
+      content += '        <point>' + i + ',' + mb + '</point>\n';
+    }
+    content += '    </reference>\n';
+    content += '</volumes>\n';
+
+    save_config(content, 'volume_curves.xml');
+  } else {
+    var content = '';
+    content += '[Speaker]\n';
+    content += '  volume_curve = explicit\n';
+    var minIdx = speaker_section.getMinIdx();
+    var maxIdx = speaker_section.getMaxIdx();
+    var points = speaker_section.generatePoints();
+    var last = 0;
+    for (var i = maxIdx; i >= minIdx; i--) {
+      var v = points[i];
+      if (isNaN(points[i])) v = last;
+      else last = v;
+      content += '  db_at_' + i + ' = ' + Math.round(v * 100) + '\n';
+    }
+
+    content += '[Headphone]\n';
+    content += '  volume_curve = simple_step\n';
+    content += '  volume_step = 70\n';
+    content += '  max_volume = 0\n';
+    save_config(content, 'HDA Intel PCH');
   }
-
-  content += '[Headphone]\n';
-  content += '  volume_curve = simple_step\n';
-  content += '  volume_step = 70\n';
-  content += '  max_volume = 0\n';
-  save_config(content);
 }
 
-function save_config(content) {
+function save_config(content, filename) {
   var a = document.getElementById('save_config_anchor');
   var uriContent = 'data:application/octet-stream,' +
       encodeURIComponent(content);
   a.href = uriContent;
-  a.download = 'HDA Intel PCH';
+  a.download = filename || 'HDA Intel PCH';
   a.click();
 }
