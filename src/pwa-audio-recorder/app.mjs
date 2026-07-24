@@ -234,7 +234,13 @@ function visualizeRecording({stream, outlineIndicator, waveformIndicator}) {
   /** Repeatedly draws the waveform and loudness indicator. */
   function draw() {
     if (!stream.active) {
-      return; // Stop drawing loop once the recording stopped.
+      // Stop drawing loop once the recording stopped, and release the
+      // AudioContext. Browsers limit the number of concurrent AudioContexts, so
+      // failing to close it here leaks one context per recording and, after a
+      // few dozen recordings, prevents new contexts from starting (the waveform
+      // stops appearing and playback breaks until the page is refreshed).
+      audioCtx.close();
+      return;
     }
 
     analyser.getByteFrequencyData(dataArray);
