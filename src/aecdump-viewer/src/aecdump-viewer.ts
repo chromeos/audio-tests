@@ -247,7 +247,7 @@ export class AecDumpViewer extends LitElement {
         @click=${this.triggerFileSelect}
       >
         <p>${this.loading ? 'Parsing dump...' : 'Drag & drop an aecdump/protobuf file here, or click to select'}</p>
-        <input type="file" id="fileInput" accept=".pb,.aecdump,*" @change=${this.onFileSelected}>
+        <input type="file" id="fileInput" accept=".pb,.aecdump,.aecdump.binpb,.binpb,*" @change=${this.onFileSelected}>
       </div>
 
       ${this.loadingStatus ? html`<div class="status">${this.loadingStatus}</div>` : ''}
