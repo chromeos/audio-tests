@@ -455,11 +455,15 @@ export class AecDumpViewer extends LitElement {
       }
 
       // Synchronized Seeking
-      ws.on('interaction', () => {
+      // Use the time carried by the event rather than ws.getCurrentTime():
+      // on the drag path wavesurfer emits 'interaction' immediately but
+      // debounces the actual seek, so getCurrentTime() is still the old
+      // position and the other tracks would sync to a stale point.
+      ws.on('interaction', (newTime) => {
         if (this.syncSeeking) return;
         this.syncSeeking = true;
-        
-        const time = ws.getCurrentTime();
+
+        const time = newTime;
         Object.values(this.tracks).forEach(t => {
           if (t.id !== track.id && t.ws) {
             t.ws.setTime(time);
