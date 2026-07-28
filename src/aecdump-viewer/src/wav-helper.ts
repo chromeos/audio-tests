@@ -10,6 +10,9 @@ export function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: boolean 
   const bitDepth = format === 3 ? 32 : 16;
 
   let result: Float32Array;
+  // The header must describe the data we actually write, not the source buffer:
+  // claiming N channels for mono samples makes the file play N times too fast.
+  let outChannels = numChannels;
   if (numChannels === 2) {
     result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
   } else if (numChannels > 2) {
@@ -17,11 +20,12 @@ export function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: boolean 
     // Let's take the first one for simplicity, or we can log a warning.
     console.warn(`audioBufferToWav: ${numChannels} channels detected. Downmixing to mono (first channel) for V1.`);
     result = buffer.getChannelData(0);
+    outChannels = 1;
   } else {
     result = buffer.getChannelData(0);
   }
 
-  return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
+  return encodeWAV(result, format, sampleRate, outChannels, bitDepth);
 }
 
 function encodeWAV(
