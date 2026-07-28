@@ -57,6 +57,24 @@ class StreamAccumulator {
     }
   }
 
+  /** Samples per channel in one APM frame; upstream fixes this at 10ms. */
+  get samplesPerFrame() {
+    return Math.round(this.sampleRate / 100);
+  }
+
+  /**
+   * Pads every channel with silence up to `targetLength`. Called before
+   * appending a chunk so the chunk lands at its true position on the capture
+   * timeline even if earlier frames omitted this stream.
+   */
+  padTo(targetLength: number) {
+    if (this.channels === 0) return;
+    for (const acc of this.accumulators) {
+      const missing = targetLength - acc.length;
+      if (missing > 0) acc.append(new Float32Array(missing));
+    }
+  }
+
   appendInterleavedInt16(bytes: Uint8Array) {
     if (this.channels === 0) return;
     // protobufjs hands back a view into the dump buffer at an arbitrary
@@ -122,6 +140,7 @@ export function parseAecDump(arrayBuffer: ArrayBuffer): DecoderResult {
   const outputAcc = new StreamAccumulator();
 
   let eventCount = 0;
+  let captureFrameCount = 0;
 
   while (offset < arrayBuffer.byteLength) {
     if (offset + 4 > arrayBuffer.byteLength) {
@@ -184,17 +203,26 @@ export function parseAecDump(arrayBuffer: ArrayBuffer): DecoderResult {
         const stream = event.stream;
         if (!stream) break;
 
+        // Each STREAM event is one 10ms capture frame. Pad both streams up to
+        // this frame's position before appending, so an event that carries only
+        // one of them does not shift everything after it out of lockstep.
+        const frameIndex = captureFrameCount++;
+
         // Input
         if (stream.inputData && stream.inputData.length > 0) {
+          inputAcc.padTo(frameIndex * inputAcc.samplesPerFrame);
           inputAcc.appendInterleavedInt16(stream.inputData);
         } else if (stream.inputChannel && stream.inputChannel.length > 0) {
+          inputAcc.padTo(frameIndex * inputAcc.samplesPerFrame);
           inputAcc.appendDeinterleavedFloat(stream.inputChannel);
         }
 
         // Output
         if (stream.outputData && stream.outputData.length > 0) {
+          outputAcc.padTo(frameIndex * outputAcc.samplesPerFrame);
           outputAcc.appendInterleavedInt16(stream.outputData);
         } else if (stream.outputChannel && stream.outputChannel.length > 0) {
+          outputAcc.padTo(frameIndex * outputAcc.samplesPerFrame);
           outputAcc.appendDeinterleavedFloat(stream.outputChannel);
         }
         break;
