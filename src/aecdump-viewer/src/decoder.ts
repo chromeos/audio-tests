@@ -59,8 +59,18 @@ class StreamAccumulator {
 
   appendInterleavedInt16(bytes: Uint8Array) {
     if (this.channels === 0) return;
-    const int16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2);
-    const numSamples = int16.length / this.channels;
+    // protobufjs hands back a view into the dump buffer at an arbitrary
+    // byteOffset, but Int16Array requires 2-byte alignment. Copy when needed.
+    let int16: Int16Array;
+    if (bytes.byteOffset % 2 === 0) {
+      int16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
+    } else {
+      const copy = new Uint8Array(bytes.byteLength);
+      copy.set(bytes);
+      int16 = new Int16Array(copy.buffer, 0, copy.byteLength >> 1);
+    }
+    // Drop any trailing partial frame rather than failing the whole parse.
+    const numSamples = Math.floor(int16.length / this.channels);
     
     // Temporary chunks for each channel
     const chunks = Array.from({ length: this.channels }, () => new Float32Array(numSamples));
