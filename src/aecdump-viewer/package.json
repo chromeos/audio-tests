@@ -12,7 +12,9 @@
     "serve:dev": "vite --port 8000",
     "test": "playwright test",
     "test:dev": "TEST_ENV=dev playwright test",
-    "proto:generate": "pbjs -t static-module -w es6 -o src/proto/debug.js src/proto/debug.proto && pbts -o src/proto/debug.d.ts src/proto/debug.js"
+    "test:unit": "vitest run tests/unit",
+    "proto:generate": "pbjs -t static-module -w es6 -o src/proto/debug.js src/proto/debug.proto && pbts -o src/proto/debug.d.ts src/proto/debug.js",
+    "fixtures:generate": "vite-node tests/fixtures/generate.ts"
   },
   "dependencies": {
     "lit": "^3.1.1",
@@ -24,6 +26,7 @@
     "protobufjs-cli": "^1.1.1",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "vite": "^5.0.12",
+    "vitest": "^2"
   }
 }
