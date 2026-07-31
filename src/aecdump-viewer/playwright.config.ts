@@ -6,6 +6,8 @@ const command = isDev ? 'yarn run serve:dev' : 'yarn run serve:dist';
 
 export default defineConfig({
   testDir: './tests',
+  // Browser tests only; tests/unit/*.test.ts run under vitest (yarn test:unit).
+  testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
