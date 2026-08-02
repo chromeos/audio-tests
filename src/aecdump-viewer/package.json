@@ -8,11 +8,12 @@
   "scripts": {
     "build": "yarn run proto:generate && tsc && vite build",
     "start": "yarn run proto:generate && vite",
-    "serve:dist": "vite preview --port 8080",
+    "serve:dist": "vite preview --port ${PREVIEW_PORT:-8080} --strictPort",
     "serve:dev": "vite --port 8000",
-    "test": "playwright test",
+    "test": "yarn run test:unit && yarn run test:e2e",
+    "test:unit": "vitest run --dir tests/unit",
+    "test:e2e": "playwright test",
     "test:dev": "TEST_ENV=dev playwright test",
-    "test:unit": "vitest run tests/unit",
     "proto:generate": "pbjs -t static-module -w es6 -o src/proto/debug.js src/proto/debug.proto && pbts -o src/proto/debug.d.ts src/proto/debug.js",
     "fixtures:generate": "vite-node tests/fixtures/generate.ts"
   },

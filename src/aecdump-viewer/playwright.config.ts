@@ -1,7 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isDev = process.env.TEST_ENV === 'dev';
-const port = isDev ? 8000 : 8080;
+// Override with PREVIEW_PORT when 8080 is taken. Playwright reuses whatever
+// already answers on the port, so a collision means testing the wrong server.
+const previewPort = Number(process.env.PREVIEW_PORT) || 8080;
+const port = isDev ? 8000 : previewPort;
 const command = isDev ? 'yarn run serve:dev' : 'yarn run serve:dist';
 
 export default defineConfig({
