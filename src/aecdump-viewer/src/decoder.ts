@@ -62,6 +62,11 @@ class StreamAccumulator {
     return Math.round(this.sampleRate / 100);
   }
 
+  /** Whether this stream carried any data at all. */
+  get hasData() {
+    return this.accumulators.some((acc) => acc.length > 0);
+  }
+
   /**
    * Pads every channel with silence up to `targetLength`. Called before
    * appending a chunk so the chunk lands at its true position on the capture
@@ -233,6 +238,12 @@ export function parseAecDump(arrayBuffer: ArrayBuffer): DecoderResult {
         break;
     }
   }
+
+  // Padding happens before an append, so a stream whose *last* frames were
+  // missing would end short rather than out of position. Extend both to the
+  // full capture timeline, leaving a stream that never appeared empty.
+  if (inputAcc.hasData) inputAcc.padTo(captureFrameCount * inputAcc.samplesPerFrame);
+  if (outputAcc.hasData) outputAcc.padTo(captureFrameCount * outputAcc.samplesPerFrame);
 
   console.log(`parseAecDump: Successfully parsed ${eventCount} events.`);
 

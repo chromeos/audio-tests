@@ -94,6 +94,29 @@ describe('input/output lockstep', () => {
     expect(energyCentroidFrames(out)).toBeGreaterThan(startFrame);
   });
 
+  it('pads a gap at the very end of the dump', () => {
+    // Padding is triggered by the next append, so trailing gaps have no
+    // following chunk to trigger it and the stream would otherwise end short.
+    const frames = 20;
+    const result = parseAecDump(
+      makeFloatDump({ frames, sampleRate: RATE, dropOutput: [17, 18, 19] })
+    );
+    expect(result.output.channelData[0].length).toBe(frames * PER_FRAME);
+    expect(result.input.channelData[0].length).toBe(frames * PER_FRAME);
+
+    const tail = result.output.channelData[0].subarray(17 * PER_FRAME);
+    expect(tail.every((s) => s === 0)).toBe(true);
+  });
+
+  it('pads a trailing gap on the input stream too', () => {
+    const frames = 20;
+    const result = parseAecDump(
+      makeFloatDump({ frames, sampleRate: RATE, dropInput: [18, 19] })
+    );
+    expect(result.input.channelData[0].length).toBe(frames * PER_FRAME);
+    expect(result.output.channelData[0].length).toBe(frames * PER_FRAME);
+  });
+
   it('handles the input stream dropping out too', () => {
     const frames = 20;
     const result = parseAecDump(
