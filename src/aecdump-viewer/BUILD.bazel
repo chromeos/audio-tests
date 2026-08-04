@@ -1,4 +1,6 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@npm_aecdump_viewer//:defs.bzl", "npm_link_all_packages")
+load("@npm_aecdump_viewer//src/aecdump-viewer:@playwright/test/package_json.bzl", playwright_bin = "bin")
 load("@npm_aecdump_viewer//src/aecdump-viewer:protobufjs-cli/package_json.bzl", protobufjs_cli_bin = "bin")
 load("@npm_aecdump_viewer//src/aecdump-viewer:typescript/package_json.bzl", typescript_bin = "bin")
 load("@npm_aecdump_viewer//src/aecdump-viewer:vite/package_json.bzl", vite_bin = "bin")
@@ -6,6 +8,7 @@ load("@npm_aecdump_viewer//src/aecdump-viewer:vitest/package_json.bzl", vitest_b
 
 # Files consumed by npm_translate_lock in MODULE.bazel.
 exports_files([
+    "browsers.json",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
@@ -112,4 +115,64 @@ typescript_bin.tsc_test(
         "src/**/*.ts",
         "tests/**/*.ts",
     ]),
+)
+
+# Browser tests. The preview server is a plain Node script rather than a
+# package-manager script, so it works inside the test action and serves the
+# bundle Bazel declared rather than whatever is in the source tree.
+#
+# chdir puts the working directory at this package, so playwright.config.ts,
+# tests/ and the bundle's dist/ all resolve relative to it. $(rootpath ...)
+# stays relative to the runfiles root, hence the ../.. to climb back out.
+E2E_SPECS = glob(["tests/**/*.spec.ts"])
+
+# Runfiles link each file individually, and Playwright's test scanner does not
+# follow symlinked files -- collection finds nothing. Materializing the specs
+# and their fixtures as one directory artifact gives it real files to scan.
+copy_to_directory(
+    name = "e2e_tests",
+    srcs = E2E_SPECS + glob(["tests/fixtures/**"]),
+    root_paths = ["src/aecdump-viewer/tests"],
+)
+
+playwright_bin.playwright_test(
+    name = "e2e",
+    size = "medium",
+    args = ["test"],
+    chdir = package_name(),
+    # rules_js patches Node's fs so symlinked packages appear resolved in place.
+    # Playwright registers its own module loader hooks, and with the patch active
+    # a spec is reached by two different paths, producing two TestType instances
+    # and "did not expect test.describe() to be called here". Running the same
+    # CLI in the same directory without the patch collects all three tests.
+    patch_node_fs = False,
+    data = [
+        "package.json",
+        "playwright.config.ts",
+        "tests/preview-server.mjs",
+        ":bundle",
+        # The specific package link, not the whole :node_modules tree. Depending
+        # on the tree gives the runner a second @playwright/test instance and
+        # Playwright rejects the specs with "did not expect test.describe()".
+        ":node_modules/@playwright/test",
+        "@playwright//:chromium-headless-shell",
+        ":e2e_tests",
+    ],
+    env = {
+        "CI": "1",
+        "PLAYWRIGHT_BROWSERS_PATH": "../../$(rootpath @playwright//:chromium-headless-shell)/../",
+        # Fixed port for now; Bazel does not hand a test an allocated TCP port.
+        # With CI=1 Playwright will not reuse an existing server, so a collision
+        # fails loudly instead of testing whatever else is listening. Dynamic
+        # allocation is the follow-up in the plan's section 7.
+        "PREVIEW_PORT": "8931",
+        "PLAYWRIGHT_TEST_DIR": "e2e_tests",
+    },
+    tags = [
+        # Playwright's test discovery finds nothing inside Bazel's sandbox: it
+        # does not follow the symlinks the sandbox stages files behind. The
+        # same target passes outside the sandbox, and upstream's own example
+        # tags its browser tests this way too.
+        "no-sandbox",
+    ],
 )
