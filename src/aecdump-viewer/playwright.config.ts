@@ -5,11 +5,11 @@ const isDev = process.env.TEST_ENV === 'dev';
 // already answers on the port, so a collision means testing the wrong server.
 const previewPort = Number(process.env.PREVIEW_PORT) || 8080;
 const port = isDev ? 8000 : previewPort;
-const command = isDev ? 'yarn run serve:dev' : 'yarn run serve:dist';
+const command = isDev ? 'pnpm run serve:dev' : 'pnpm run serve:dist';
 
 export default defineConfig({
   testDir: './tests',
-  // Browser tests only; tests/unit/*.test.ts run under vitest (yarn test:unit).
+  // Browser tests only; tests/unit/*.test.ts run under vitest (pnpm test:unit).
   testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

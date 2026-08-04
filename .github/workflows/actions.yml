@@ -17,7 +17,7 @@ jobs:
       working-directory: src/ds-playground
     - run: cp -r src/ds-playground/dist out/ds-playground
     - name: Build AECDump Viewer
-      run: yarn install --frozen-lockfile --registry https://registry.npmjs.org && yarn run build
+      run: corepack enable && pnpm install --frozen-lockfile && pnpm run build
       working-directory: src/aecdump-viewer
     - name: Copy AECDump Viewer to out
       run: cp -r src/aecdump-viewer/dist out/aecdump-viewer

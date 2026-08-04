@@ -5,12 +5,13 @@
   "author": "aaronyu",
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
-    "build": "yarn run proto:generate && tsc && vite build",
-    "start": "yarn run proto:generate && vite",
+    "build": "pnpm run proto:generate && tsc && vite build",
+    "start": "pnpm run proto:generate && vite",
     "serve:dist": "vite preview --port ${PREVIEW_PORT:-8080} --strictPort",
     "serve:dev": "vite --port 8000",
-    "test": "yarn run test:unit && yarn run test:e2e",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
     "test:unit": "vitest run --dir tests/unit",
     "test:e2e": "playwright test",
     "test:dev": "TEST_ENV=dev playwright test",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "lit": "^3.1.1",
+    "long": "^5.3.2",
     "protobufjs": "^7.2.4",
     "wavesurfer.js": "^7.7.15"
   },

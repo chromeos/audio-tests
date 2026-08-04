@@ -1,5 +1,5 @@
 /**
- * Writes the committed test fixtures. Run with `yarn fixtures:generate` after
+ * Writes the committed test fixtures. Run with `pnpm fixtures:generate` after
  * changing make-dump.ts; the output is committed so the browser tests can run
  * without a generation step.
  */
