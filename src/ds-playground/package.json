@@ -5,6 +5,7 @@
   "author": "ds-playground",
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "lint": "eslint --ext .ts . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
