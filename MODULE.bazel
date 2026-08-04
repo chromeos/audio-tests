@@ -17,9 +17,9 @@ bazel_dep(name = "aspect_rules_js", version = "3.3.1")
 
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 
-# yarn.lock remains the developer-facing lockfile. pnpm-lock.yaml is derived
-# from it with `pnpm import` and committed; rules_js reads it read-only, so no
-# repository rule writes into the source tree during a build.
+# pnpm-lock.yaml is the authoritative lockfile and is read natively by rules_js,
+# so no repository rule writes into the source tree during a build. pnpm is the
+# package manager for this subproject; see packageManager in its package.json.
 npm.npm_translate_lock(
     name = "npm_aecdump_viewer",
     pnpm_lock = "//src/aecdump-viewer:pnpm-lock.yaml",
