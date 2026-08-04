@@ -1,6 +1,8 @@
 load("@npm_aecdump_viewer//:defs.bzl", "npm_link_all_packages")
 load("@npm_aecdump_viewer//src/aecdump-viewer:protobufjs-cli/package_json.bzl", protobufjs_cli_bin = "bin")
+load("@npm_aecdump_viewer//src/aecdump-viewer:typescript/package_json.bzl", typescript_bin = "bin")
 load("@npm_aecdump_viewer//src/aecdump-viewer:vite/package_json.bzl", vite_bin = "bin")
+load("@npm_aecdump_viewer//src/aecdump-viewer:vitest/package_json.bzl", vitest_bin = "bin")
 
 # Files consumed by npm_translate_lock in MODULE.bazel.
 exports_files([
@@ -64,4 +66,46 @@ vite_bin.vite(
     chdir = package_name(),
     out_dirs = ["dist"],
     visibility = ["//:__pkg__"],
+)
+
+# Unit tests. Mirrors `vitest run --dir tests/unit`; the browser suite runs
+# under Playwright and is added separately.
+vitest_bin.vitest_test(
+    name = "unit",
+    size = "small",
+    args = [
+        "run",
+        "--dir",
+        "tests/unit",
+    ],
+    chdir = package_name(),
+    data = [
+        "vite.config.ts",
+        ":node_modules",
+        ":proto",
+    ] + glob([
+        "src/**/*.ts",
+        "tests/**/*.ts",
+    ]),
+)
+
+# Typecheck only. The package.json build runs tsc purely as a gate but without
+# --noEmit, so it also writes JavaScript nobody consumes into out-tsc/.
+typescript_bin.tsc_test(
+    name = "typecheck",
+    size = "small",
+    args = [
+        "--noEmit",
+        "-p",
+        "tsconfig.json",
+    ],
+    chdir = package_name(),
+    data = [
+        "tsconfig.json",
+        ":node_modules",
+        ":proto",
+    ] + glob([
+        "src/**/*.ts",
+        "tests/**/*.ts",
+    ]),
 )
