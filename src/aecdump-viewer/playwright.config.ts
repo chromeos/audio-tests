@@ -5,10 +5,21 @@ const isDev = process.env.TEST_ENV === 'dev';
 // already answers on the port, so a collision means testing the wrong server.
 const previewPort = Number(process.env.PREVIEW_PORT) || 8080;
 const port = isDev ? 8000 : previewPort;
-const command = isDev ? 'pnpm run serve:dev' : 'pnpm run serve:dist';
+
+// The built site to serve. Under Bazel this points at the declared :bundle
+// output; locally it defaults to the dist/ that `pnpm build` writes.
+const previewRoot = process.env.PREVIEW_ROOT || 'dist';
+
+// Serve with a plain Node server rather than a package-manager script: under
+// Bazel the package manager is not necessarily present in the test action, and
+// `vite preview` would serve the source tree instead of the declared bundle.
+const command = isDev
+  ? 'pnpm run serve:dev'
+  : `node tests/preview-server.mjs ${previewRoot} ${port}`;
 
 export default defineConfig({
-  testDir: './tests',
+  // Bazel points this at a materialized directory of specs; see BUILD.bazel.
+  testDir: process.env.PLAYWRIGHT_TEST_DIR || './tests',
   // Browser tests only; tests/unit/*.test.ts run under vitest (pnpm test:unit).
   testMatch: '**/*.spec.ts',
   fullyParallel: true,

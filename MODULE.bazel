@@ -38,3 +38,17 @@ npm.npm_translate_lock(
     },
 )
 use_repo(npm, "npm_ds_playground")
+
+# Playwright browsers, fetched by Bazel rather than by a post-install step.
+# Pinned below the 1.57 Chrome-for-Testing cliff: rules_playwright 0.5.3 only
+# generates the legacy builds/chromium/<revision>/ download paths, which stop
+# resolving for 1.57+ on x64. browsers.json is vendored from playwright-core so
+# the revision is a committed input rather than an unhashed unpkg fetch.
+bazel_dep(name = "rules_playwright", version = "0.5.3")
+
+playwright = use_extension("@rules_playwright//playwright:extensions.bzl", "playwright")
+playwright.repo(
+    name = "playwright",
+    browsers_json = "//src/aecdump-viewer:browsers.json",
+)
+use_repo(playwright, "playwright")
