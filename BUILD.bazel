@@ -7,12 +7,20 @@ copy_to_directory(
     name = "site",
     srcs = [
         "src/index.html",
+        "//src/aecdump-viewer:bundle",
         "//src/audio-tuning:files",
+        "//src/ds-playground:bundle",
         "//src/mic-testing:files",
         "//src/pwa-audio-recorder:files",
         "//src/screen-capture-test:files",
         "//src/volume-tuning:files",
     ],
+    # Static demos keep their directory name; the two bundled subprojects are
+    # published from their dist/ directory under the subproject's own name.
+    replace_prefixes = {
+        "aecdump-viewer/dist": "aecdump-viewer",
+        "ds-playground/dist": "ds-playground",
+    },
     # Site paths are relative to src/, so src/mic-testing/x -> mic-testing/x.
     root_paths = ["src"],
     visibility = ["//visibility:public"],
