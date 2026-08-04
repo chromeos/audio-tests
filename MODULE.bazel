@@ -11,3 +11,17 @@ module(
 
 # copy_to_directory, used to assemble the published site.
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+
+# JavaScript toolchain and npm dependency resolution.
+bazel_dep(name = "aspect_rules_js", version = "3.3.1")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+
+# yarn.lock remains the developer-facing lockfile. pnpm-lock.yaml is derived
+# from it with `pnpm import` and committed; rules_js reads it read-only, so no
+# repository rule writes into the source tree during a build.
+npm.npm_translate_lock(
+    name = "npm_aecdump_viewer",
+    pnpm_lock = "//src/aecdump-viewer:pnpm-lock.yaml",
+)
+use_repo(npm, "npm_aecdump_viewer")

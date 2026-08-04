@@ -1,0 +1,6 @@
+# Consumed by rules_js via npm_translate_lock. Declares which packages may run
+# install lifecycle scripts, so no dependency executes code at install time
+# without being listed here explicitly.
+allowBuilds:
+  esbuild: true
+  protobufjs: true
