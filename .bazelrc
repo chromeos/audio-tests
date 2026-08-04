@@ -1,0 +1,9 @@
+# aspect_rules_js pulls in aspect_tools_telemetry, which is enabled by default
+# and POSTs to https://telemetry.aspect.build/ingest from a repository rule. Its
+# payload includes an organization name, a hash of the repository, and a salted
+# hash of the username. Disable it: this repository does not send build metadata
+# to third parties.
+#
+# --repo_env is required because the value is read by a repository rule.
+# The module also honours DO_NOT_TRACK, but -all is explicit about intent.
+common --repo_env=ASPECT_TOOLS_TELEMETRY=-all
