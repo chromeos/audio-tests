@@ -13,7 +13,7 @@ jobs:
     - run: mkdir -p out
     - run: cp src/index.html out/
     - run: cp -r src/audio-tuning src/mic-testing src/volume-tuning src/pwa-audio-recorder src/screen-capture-test out/
-    - run: npm ci && npm run build
+    - run: corepack enable && pnpm install --frozen-lockfile && pnpm run build
       working-directory: src/ds-playground
     - run: cp -r src/ds-playground/dist out/ds-playground
     - name: Build AECDump Viewer
