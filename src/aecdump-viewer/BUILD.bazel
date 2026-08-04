@@ -1,0 +1,12 @@
+load("@npm_aecdump_viewer//:defs.bzl", "npm_link_all_packages")
+
+# Files consumed by npm_translate_lock in MODULE.bazel.
+exports_files([
+    "package.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+])
+
+# Links the resolved npm packages into a Bazel-managed node_modules tree.
+npm_link_all_packages(name = "node_modules")
