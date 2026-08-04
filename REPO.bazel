@@ -1,0 +1,5 @@
+# node_modules trees are managed by package managers, not Bazel. Bazel 9 requires
+# them to be ignored explicitly or every install churns the build graph.
+ignore_directories([
+    "**/node_modules",
+])
