@@ -1,0 +1,19 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+
+# The published site tree, equivalent to what the GitHub Actions workflow
+# assembles into out/ before uploading it to gh-pages.
+# Adding a demo means adding its target here.
+copy_to_directory(
+    name = "site",
+    srcs = [
+        "src/index.html",
+        "//src/audio-tuning:files",
+        "//src/mic-testing:files",
+        "//src/pwa-audio-recorder:files",
+        "//src/screen-capture-test:files",
+        "//src/volume-tuning:files",
+    ],
+    # Site paths are relative to src/, so src/mic-testing/x -> mic-testing/x.
+    root_paths = ["src"],
+    visibility = ["//visibility:public"],
+)

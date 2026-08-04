@@ -1,0 +1,2 @@
+# Bazel convenience symlinks into the output base.
+/bazel-*

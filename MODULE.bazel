@@ -1,0 +1,13 @@
+"""Bazel module for chromeos/audio-tests.
+
+Builds the static demo pages and the two JavaScript subprojects into the site
+tree that is published to https://chromeos.github.io/audio-tests/.
+"""
+
+module(
+    name = "audio_tests",
+    version = "0.0.0",
+)
+
+# copy_to_directory, used to assemble the published site.
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")

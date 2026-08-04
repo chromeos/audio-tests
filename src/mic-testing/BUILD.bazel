@@ -1,0 +1,9 @@
+# Static demo page: every file ships as-is.
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD.bazel"],
+    ),
+    visibility = ["//:__pkg__"],
+)
