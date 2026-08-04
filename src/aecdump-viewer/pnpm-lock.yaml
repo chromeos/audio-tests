@@ -11,6 +11,9 @@ importers:
       lit:
         specifier: ^3.1.1
         version: 3.3.3
+      long:
+        specifier: ^5.3.2
+        version: 5.3.2
       protobufjs:
         specifier: ^7.2.4
         version: 7.6.0
