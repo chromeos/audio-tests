@@ -25,3 +25,16 @@ npm.npm_translate_lock(
     pnpm_lock = "//src/aecdump-viewer:pnpm-lock.yaml",
 )
 use_repo(npm, "npm_aecdump_viewer")
+
+# @material/web's .d.ts files import lit-html directly while declaring only lit,
+# so its types do not resolve under pnpm's strict layout. npm's flat hoisting
+# masked this. Hoist that one package rather than declaring someone else's
+# missing dependency in our own manifest.
+npm.npm_translate_lock(
+    name = "npm_ds_playground",
+    pnpm_lock = "//src/ds-playground:pnpm-lock.yaml",
+    public_hoist_packages = {
+        "lit-html": ["src/ds-playground"],
+    },
+)
+use_repo(npm, "npm_ds_playground")

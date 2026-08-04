@@ -1,0 +1,48 @@
+load("@npm_ds_playground//:defs.bzl", "npm_link_all_packages")
+load("@npm_ds_playground//src/ds-playground:rollup/package_json.bzl", rollup_bin = "bin")
+load("@npm_ds_playground//src/ds-playground:typescript/package_json.bzl", typescript_bin = "bin")
+
+# Files consumed by npm_translate_lock in MODULE.bazel.
+exports_files([
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+])
+
+npm_link_all_packages(name = "node_modules")
+
+# tsc emits to out-tsc/, which index.html references and rollup then bundles.
+typescript_bin.tsc(
+    name = "tsc",
+    srcs = [
+        "tsconfig.json",
+        ":node_modules",
+    ] + glob(["src/**/*.ts"]),
+    chdir = package_name(),
+    out_dirs = ["out-tsc"],
+)
+
+# Production bundle. The npm script also runs rimraf (unnecessary in Bazel's
+# sandbox) and cem analyze, which is deliberately dropped: it writes
+# custom-elements.json to the project root, never to dist/, so it has never been
+# part of the published site.
+rollup_bin.rollup(
+    name = "bundle",
+    srcs = [
+        "index.html",
+        "rollup.config.js",
+        # rollup-plugin-esbuild reads tsconfig.json to choose its transform
+        # target. Without it in the sandbox esbuild picks a different default
+        # and downlevels differently, changing the bundle.
+        "tsconfig.json",
+        ":node_modules",
+        ":tsc",
+    ],
+    args = [
+        "-c",
+        "rollup.config.js",
+    ],
+    chdir = package_name(),
+    out_dirs = ["dist"],
+    visibility = ["//:__pkg__"],
+)
