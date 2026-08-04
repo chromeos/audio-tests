@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.41.2",
+    "@types/node": "^22",
     "protobufjs-cli": "^1.1.1",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",

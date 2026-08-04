@@ -20,15 +20,9 @@ npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 # pnpm-lock.yaml is the authoritative lockfile and is read natively by rules_js,
 # so no repository rule writes into the source tree during a build. pnpm is the
 # package manager for this subproject; see packageManager in its package.json.
-# undici-types (a transitive dependency of @types/node, itself pulled in by
-# vitest) carries /// <reference types="node" />, which does not resolve under
-# pnpm's strict layout. Hoist @types/node so the reference resolves.
 npm.npm_translate_lock(
     name = "npm_aecdump_viewer",
     pnpm_lock = "//src/aecdump-viewer:pnpm-lock.yaml",
-    public_hoist_packages = {
-        "@types/node": ["src/aecdump-viewer"],
-    },
 )
 use_repo(npm, "npm_aecdump_viewer")
 
