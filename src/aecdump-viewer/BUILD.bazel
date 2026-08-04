@@ -1,4 +1,6 @@
 load("@npm_aecdump_viewer//:defs.bzl", "npm_link_all_packages")
+load("@npm_aecdump_viewer//src/aecdump-viewer:protobufjs-cli/package_json.bzl", protobufjs_cli_bin = "bin")
+load("@npm_aecdump_viewer//src/aecdump-viewer:vite/package_json.bzl", vite_bin = "bin")
 
 # Files consumed by npm_translate_lock in MODULE.bazel.
 exports_files([
@@ -9,3 +11,57 @@ exports_files([
 
 # Links the resolved npm packages into a Bazel-managed node_modules tree.
 npm_link_all_packages(name = "node_modules")
+
+# Protobuf bindings. pbjs and pbts are two dependent actions: pbts reads the
+# JavaScript that pbjs emits. Both mirror the package.json proto:generate script.
+protobufjs_cli_bin.pbjs(
+    name = "proto_js",
+    srcs = ["src/proto/debug.proto"],
+    args = [
+        "-t",
+        "static-module",
+        "-w",
+        "es6",
+        "-o",
+        "src/proto/debug.js",
+        "src/proto/debug.proto",
+    ],
+    chdir = package_name(),
+    outs = ["src/proto/debug.js"],
+)
+
+protobufjs_cli_bin.pbts(
+    name = "proto_dts",
+    srcs = [":proto_js"],
+    args = [
+        "-o",
+        "src/proto/debug.d.ts",
+        "src/proto/debug.js",
+    ],
+    chdir = package_name(),
+    outs = ["src/proto/debug.d.ts"],
+)
+
+filegroup(
+    name = "proto",
+    srcs = [
+        ":proto_dts",
+        ":proto_js",
+    ],
+)
+
+# Production bundle, equivalent to `vite build`.
+vite_bin.vite(
+    name = "bundle",
+    srcs = [
+        "index.html",
+        "tsconfig.json",
+        "vite.config.ts",
+        ":node_modules",
+        ":proto",
+    ] + glob(["src/**/*.ts"]),
+    args = ["build"],
+    chdir = package_name(),
+    out_dirs = ["dist"],
+    visibility = ["//:__pkg__"],
+)
