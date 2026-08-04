@@ -80,12 +80,16 @@ vitest_bin.vitest_test(
     ],
     chdir = package_name(),
     data = [
+        # Only what the unit suite reads: the sources under test, the unit
+        # tests, and the fixture builder they import. Declaring all of tests/
+        # would let unrelated e2e changes invalidate this target's cache.
+        "tests/fixtures/make-dump.ts",
         "vite.config.ts",
         ":node_modules",
         ":proto",
     ] + glob([
         "src/**/*.ts",
-        "tests/**/*.ts",
+        "tests/unit/**/*.ts",
     ]),
 )
 
