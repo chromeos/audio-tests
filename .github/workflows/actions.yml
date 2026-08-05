@@ -10,17 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: mkdir -p out
-    - run: cp src/index.html out/
-    - run: cp -r src/audio-tuning src/mic-testing src/volume-tuning src/pwa-audio-recorder src/screen-capture-test out/
-    - run: corepack enable && pnpm install --frozen-lockfile && pnpm run build
-      working-directory: src/ds-playground
-    - run: cp -r src/ds-playground/dist out/ds-playground
-    - name: Build AECDump Viewer
-      run: corepack enable && pnpm install --frozen-lockfile && pnpm run build
-      working-directory: src/aecdump-viewer
-    - name: Copy AECDump Viewer to out
-      run: cp -r src/aecdump-viewer/dist out/aecdump-viewer
+    # Bazel provides the Node toolchain, npm dependencies and browsers, so no
+    # setup-node, package-manager install or playwright install step is needed.
+    # All four caches default to false and must be enabled explicitly.
+    - uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: true
+        disk-cache: ${{ github.workflow }}
+        repository-cache: true
+    - name: Test
+      run: bazel test //...
+    - name: Build site
+      run: bazel build //:site
+    # bazel-bin is a symlink into the output base, and the artifact upload does
+    # not follow it, so stage the tree. Bazel's outputs are mode 555; the deploy
+    # job commits this tree to gh-pages, so normalise to 644/755 or every file
+    # would land marked executable.
+    - name: Stage site
+      run: |
+        mkdir -p out && cp -RL bazel-bin/site/. out/
+        find out -type d -exec chmod 755 {} +
+        find out -type f -exec chmod 644 {} +
     - uses: actions/upload-artifact@v4
       with:
         name: out
