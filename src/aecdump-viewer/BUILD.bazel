@@ -169,6 +169,13 @@ playwright_bin.playwright_test(
         "PLAYWRIGHT_TEST_DIR": "e2e_tests",
     },
     tags = [
+        # This target's inputs are not fully declared: without the sandbox,
+        # Node resolves packages through runfiles symlinks into the shared
+        # bazel-bin tree and can read files that are not inputs. Bazel would
+        # otherwise memoise the verdict as though the inputs were complete, so
+        # force it to re-run. Note "no-cache" does NOT do this -- it governs
+        # action-output caching, a different layer from test-result caching.
+        "external",
         # Playwright's test discovery finds nothing inside Bazel's sandbox: it
         # does not follow the symlinks the sandbox stages files behind. The
         # same target passes outside the sandbox, and upstream's own example
