@@ -5,15 +5,25 @@ on:
     branches: [main]
   pull_request:
 
+# Deny by default; each job opts in to what it needs.
+permissions: {}
+
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    # persist-credentials: false keeps the token out of .git/config, which is
+    # otherwise reachable from build output and uploaded artifacts. Nothing here
+    # pushes; the deploy job supplies its own token.
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2
+      with:
+        persist-credentials: false
     # Bazel provides the Node toolchain, npm dependencies and browsers, so no
     # setup-node, package-manager install or playwright install step is needed.
     # All four caches default to false and must be enabled explicitly.
-    - uses: bazel-contrib/setup-bazel@0.19.0
+    - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
       with:
         bazelisk-cache: true
         disk-cache: ${{ github.workflow }}
@@ -27,7 +37,7 @@ jobs:
     # convenience symlink.
     - name: Stage site
       run: bazel run //:stage_site
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: out
         path: out/
@@ -39,7 +49,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v4.1.7
+    - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
       with:
         name: out
         path: out/
