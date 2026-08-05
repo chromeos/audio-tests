@@ -1,2 +1,5 @@
 # Bazel convenience symlinks into the output base.
 /bazel-*
+
+# Staged site output from `bazel run //:stage_site`.
+/out/

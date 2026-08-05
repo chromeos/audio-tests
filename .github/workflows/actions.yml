@@ -22,15 +22,11 @@ jobs:
       run: bazel test //...
     - name: Build site
       run: bazel build //:site
-    # bazel-bin is a symlink into the output base, and the artifact upload does
-    # not follow it, so stage the tree. Bazel's outputs are mode 555; the deploy
-    # job commits this tree to gh-pages, so normalise to 644/755 or every file
-    # would land marked executable.
+    # Materializes //:site into out/. Writes 644/755 directly, so the deploy job
+    # does not commit a tree of executables, and does not depend on the bazel-bin
+    # convenience symlink.
     - name: Stage site
-      run: |
-        mkdir -p out && cp -RL bazel-bin/site/. out/
-        find out -type d -exec chmod 755 {} +
-        find out -type f -exec chmod 644 {} +
+      run: bazel run //:stage_site
     - uses: actions/upload-artifact@v4
       with:
         name: out

@@ -25,3 +25,18 @@ copy_to_directory(
     root_paths = ["src"],
     visibility = ["//visibility:public"],
 )
+
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+
+# Materializes //:site into out/ for the CI artifact upload: `bazel run //:stage_site`.
+# Used as a directory-copy primitive rather than for its usual round-tripping
+# purpose, so the staleness test and the destination-exists check are off -- out/
+# is build output, not something checked in. Unlike a shell copy this writes
+# 644/755 without post-hoc chmod, does not reach into the bazel-bin symlink, and
+# removes files that are no longer part of the site.
+write_source_files(
+    name = "stage_site",
+    files = {"out": "//:site"},
+    check_that_out_file_exists = False,
+    diff_test = False,
+)
