@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screen Capture & Audio Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>Screen Capture & Audio Test</h1>
+  </header>
+
+  <main>
+    <div class="controls-card">
+      <button id="startCaptureBtn">Start Capture & Record</button>
+      <div id="recordingStatus" class="status-bar"></div>
+    </div>
+
+    <div id="errorMsg" style="color: var(--error-color); text-align: center;"></div>
+
+    <div class="video-grid">
+      <div class="video-container">
+        <div class="video-header">
+          <h2>Live Preview</h2>
+        </div>
+        <video id="previewVideo" autoplay playsinline muted></video>
+        <div class="volume-meter-container">
+          <div class="volume-label">Audio Level</div>
+          <div class="volume-meter">
+            <div id="volumeLevel" class="volume-level"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="recordingsList" class="recordings-grid">
+      <!-- Recordings will be appended here -->
+    </div>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+
+</html>
