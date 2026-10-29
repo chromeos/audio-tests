@@ -64,15 +64,17 @@
         </div>
 
         <div class="mdc-card">
-          <div class="mdc-card__actions" id="config-radios">
+          <div class="mdc-card__actions" id="config-options" style="flex-wrap: wrap; gap: 8px;">
             Recording configuration
-            <template id="config-radio-template">
+            <template id="config-checkbox-template">
               <div class="mdc-form-field">
-                <div class="mdc-radio">
-                  <input class="mdc-radio__native-control" type="radio" name="config-group">
-                  <div class="mdc-radio__background">
-                    <div class="mdc-radio__outer-circle"></div>
-                    <div class="mdc-radio__inner-circle"></div>
+                <div class="mdc-checkbox">
+                  <input type="checkbox" class="mdc-checkbox__native-control" checked>
+                  <div class="mdc-checkbox__background">
+                    <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                      <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                    </svg>
+                    <div class="mdc-checkbox__mixedmark"></div>
                   </div>
                 </div>
                 <label></label>

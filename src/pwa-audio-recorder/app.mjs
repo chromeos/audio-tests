@@ -30,62 +30,64 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js');
 }
 
-const CONFIG_RADIOS_SELECTOR = '#config-radios';
-const CONFIG_RADIO_TEMPLATE_SELECTOR = '#config-radio-template';
+const CONFIG_OPTIONS_SELECTOR = '#config-options';
+const CONFIG_CHECKBOX_TEMPLATE_SELECTOR = '#config-checkbox-template';
 
-const RECORDING_CONFIGS = [
-  { name: "default", param: true },
-  {
-    name: "no-effects",
-    param: {
-      autoGainControl: false,
-      echoCancellation: false,
-      noiseSuppression: false,
-    }
-  },
-  {
-    name: "agc-only",
-    param: {
-      autoGainControl: true,
-      echoCancellation: false,
-      noiseSuppression: false,
-    }
-  },
+const RECORDING_EFFECT_OPTIONS = [
+  'echoCancellation',
+  'noiseSuppression',
+  'autoGainControl',
 ];
 
+const CONFIG_PRESETS = {
+  'default': {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  },
+  'no-effects': {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+  },
+  'agc-only': {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: true,
+  },
+};
+
 function populateRecordingConfigurations() {
-  const configRadioTemplate = document.querySelector(CONFIG_RADIO_TEMPLATE_SELECTOR);
-  const configRadios = document.querySelector(CONFIG_RADIOS_SELECTOR);
-  const configParam = new URLSearchParams(window.location.search).get('config');
+  const configCheckboxTemplate = document.querySelector(CONFIG_CHECKBOX_TEMPLATE_SELECTOR);
+  const configOptions = document.querySelector(CONFIG_OPTIONS_SELECTOR);
+  const searchParams = new URLSearchParams(window.location.search);
+  const configParam = searchParams.get('config');
+  const preset = (configParam && CONFIG_PRESETS[configParam]) || CONFIG_PRESETS['default'];
 
-  for (const [i, {name, param}] of RECORDING_CONFIGS.entries()) {
-    const radio = configRadioTemplate.content.firstElementChild.cloneNode(true);
-    const input = radio.querySelector('input');
-    const label = radio.querySelector('label');
-    input.id = `radio-${name}`;
-    label.textContent = `${name} (${JSON.stringify(param)})`;
+  for (const name of RECORDING_EFFECT_OPTIONS) {
+    const checkbox = configCheckboxTemplate.content.firstElementChild.cloneNode(true);
+    const input = checkbox.querySelector('input');
+    const label = checkbox.querySelector('label');
+    input.id = `checkbox-${name}`;
+    input.name = name;
+    input.checked = searchParams.has(name)
+      ? searchParams.get(name) !== 'false' && searchParams.get(name) !== '0'
+      : preset[name];
+    label.textContent = name;
     label.setAttribute('for', input.id);
-    label.recordingParam = param;
-
-    // Check if this config matches the query param, otherwise default to the first one
-    if (configParam) {
-      if (name === configParam) {
-        input.checked = true;
-      }
-    } else if (i === 0) {
-      input.checked = true;
-    }
-
-    configRadios.appendChild(radio);
+    configOptions.appendChild(checkbox);
   }
 }
 
 function getSelectedRecordingConfig() {
-  const configRadios = document.querySelector(CONFIG_RADIOS_SELECTOR);
-  const selectedRadio = configRadios.querySelector('input:checked');
-  const label = configRadios.querySelector(`label[for="${selectedRadio.id}"]`);
+  const configOptions = document.querySelector(CONFIG_OPTIONS_SELECTOR);
+  const param = {};
+  for (const name of RECORDING_EFFECT_OPTIONS) {
+    const input = configOptions.querySelector(`#checkbox-${name}`);
+    param[name] = Boolean(input && input.checked);
+  }
 
-  return {text: label.textContent, param: label.recordingParam};
+  return {text: JSON.stringify(param), param};
 }
 
 /** Initializes the web application. */
