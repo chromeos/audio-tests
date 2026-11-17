@@ -18,11 +18,11 @@ window.onload = function() {
 
 function toggle_format() {
   var formatEl = document.querySelector('input[name="config_format"]:checked');
-  var format = formatEl ? formatEl.value : 'android';
+  var format = formatEl ? formatEl.value : 'googlebookos';
   var speakerTitle = document.getElementById('speaker_title');
   var headphoneSection = document.getElementById('headphone_section');
 
-  if (format === 'android') {
+  if (format === 'googlebookos') {
     speakerTitle.style.display = 'block';
     headphoneSection.style.display = 'block';
     if (speaker_section) speaker_section.setIndexDefaults(1, 15, 1);
@@ -413,9 +413,9 @@ function drawText(ctx, s, x, y, align) {
 //
 function download_config() {
   var formatEl = document.querySelector('input[name="config_format"]:checked');
-  var format = formatEl ? formatEl.value : 'android';
+  var format = formatEl ? formatEl.value : 'googlebookos';
 
-  if (format === 'android') {
+  if (format === 'googlebookos') {
     var content = "<?xml version='1.0' encoding='utf-8'?>\n<volumes>\n";
 
     var sMin = speaker_section.getMinIdx();
